@@ -81,14 +81,14 @@ This can be tested with the following Makefile commands for builing and running
 make docker_build
 
 # Which is
-docker build -t digit_recognizer:v1 -f web_service/Dockerfile .
+docker build --platform linux/amd64 -t digit_recognizer:v1 -f web_service/Dockerfile .
 ```
 
 ```bash
 make docker_run
 
 # Which is
-docker run -p 9696:9696 digit_recognizer:v1
+docker run -p 9696:9696 --platform linux/amd64 digit_recognizer:v1
 ```
 
 This can then be tested with the makefile
@@ -97,4 +97,44 @@ make test_client
 ```
 
 # Cloud deployment
-TBD
+Using kubernetes eks.
+
+kube-config directory created for cluster config, deployment and service.
+
+Create the cluster
+```
+eksctl create clutser -f kube-config/cluster.yaml
+```
+
+Tag and push our docker images
+```
+docker tag digit_recognizer:v1 <<aws account>>.dkr.ecr.us-east-1.amazonaws.com/mlzoomcamp-images:digit_recognizer-v1
+docker push <<aws account>>.dkr.ecr.us-east-1.amazonaws.com/mlzoomcamp-images:digit_recognizer-v1
+```
+
+kubectl apply
+```
+kubectl apply -f kube-config/gateway-deployment.yaml
+kubectl apply -f kube-config/gateway-service.yaml
+```
+
+Check pod
+```
+kubectl get pod
+```
+
+Check endpoint url
+```
+kubctl get svc
+```
+
+Test
+```
+curl -X POST -d @row_data.json -H "Content-Type: application/json" http://yourawsurl/predict
+```
+
+Predict!
+
+![Alt Text](images/kubectl.png)
+
+![Alt Text](images/curl_model.png)
